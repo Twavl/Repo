@@ -114,22 +114,64 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Form animations
+// Form animations and submission
 const form = document.querySelector('.contact-form');
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const button = form.querySelector('button');
+    const formData = new FormData(form);
+    
+    // Replace this URL with your Discord webhook URL
+    const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1345255740268347433/_Ov34WPh-9tKTvg6bwB3b1oiih526gvBMVP5ZEysZcmKc0LuWvmYJLe7MNoDcpLIGfDC';
+    
     button.innerHTML = '<span class="loading"></span>';
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    button.innerHTML = 'Message Sent!';
-    button.classList.add('success');
+    try {
+        const response = await fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                embeds: [{
+                    title: 'New Contact Form Submission',
+                    color: 0x00ff00,
+                    fields: [
+                        {
+                            name: 'Name',
+                            value: formData.get('name'),
+                            inline: true
+                        },
+                        {
+                            name: 'Email',
+                            value: formData.get('email'),
+                            inline: true
+                        },
+                        {
+                            name: 'Message',
+                            value: formData.get('message')
+                        }
+                    ],
+                    timestamp: new Date().toISOString()
+                }]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to send message');
+        }
+
+        button.innerHTML = 'Message Sent!';
+        button.classList.add('success');
+        form.reset();
+    } catch (error) {
+        console.error('Error:', error);
+        button.innerHTML = 'Error Sending Message';
+        button.classList.add('error');
+    }
     
     setTimeout(() => {
         button.innerHTML = 'Send Message';
-        button.classList.remove('success');
-        form.reset();
+        button.classList.remove('success', 'error');
     }, 3000);
 });
